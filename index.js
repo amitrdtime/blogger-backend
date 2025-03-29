@@ -1,33 +1,38 @@
-require("dotenv").config();
-const express = require('express')
-const app = express()
+const express = require('express');
+const app = express();
 const bodyParser = require('body-parser');
-const port = 3000;
-const mongoose = require("mongoose")
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+const dotenv = require("dotenv").config();
+const cors = require('cors');
 
+app.use(cors())
 
-mongoose
-	.connect("mongodb://127.0.0.1:27017/db_bloggerv1")
-	.then(() => {
-    console.log('Mongodb Mongoose connected');
-      const userRouter = require("./routers/user-router");
-      const catRouter = require("./routers/category-router");
-      const postRouter = require("./routers/posts-router");
+const dbConnection = require('./helper/mongoose');
 
-      // parse application/x-www-form-urlencoded
-      app.use(bodyParser.urlencoded({ extended: false }))
+dbConnection()
+.then(() => {
+        console.log('Connected to MongoDB');
+        
+        const authrouter = require('./routers/Auther');
+        app.use('/author', authrouter);
 
-      // parse application/json
-      app.use(bodyParser.json())
+        const catrouter = require('./routers/category');
+        app.use('/category', catrouter);
 
-      app.use("/user", userRouter);
-      app.use("/cat", catRouter);
-      app.use("/posts", postRouter);
+        const commentrouter = require('./routers/comments');
+        app.use('/comment', commentrouter);
 
-      app.listen(port, () => {
-        console.log(`Example app listening on port ${port}`)
-      })
+        const postrouter = require('./routers/post');
+        app.use('/post', postrouter);
 
-}).catch(error => {
-  console.error('Error starting server:', error);
-});
+        const userrouter = require('./routers/users');
+        app.use('/users', userrouter);
+
+        app.listen(5000, () => {
+          console.log(`Example app listening on port 3000`);
+        });
+  })
+  .catch((error) => {
+    console.error('MongoDB connection error:', error);
+  });
